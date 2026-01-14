@@ -6,6 +6,7 @@ import logging
 from enum import Enum, auto
 from typing import TYPE_CHECKING
 
+import numpy as np
 import gi
 
 gi.require_version("Gtk", "3.0")
@@ -73,3 +74,49 @@ class App:
         if self._tray is not None:
             # Schedule UI update on GTK thread
             GLib.idle_add(self._tray.set_state, state)
+
+    def _process_recording(self, audio: np.ndarray) -> None:
+        """Process recorded audio: transcribe, cleanup, paste.
+
+        Args:
+            audio: Recorded audio samples
+        """
+        self._set_state(AppState.PROCESSING)
+
+        try:
+            # Step 1: Transcribe
+            if self._transcriber is None:
+                logger.error("Transcriber not initialized")
+                return
+
+            text = self._transcriber.transcribe(audio)
+
+            if not text.strip():
+                logger.info("No speech detected, skipping paste")
+                return
+
+            # Step 2: Optional Claude cleanup
+            if self._config.claude_enabled and self._postprocessor is not None:
+                if self._postprocessor.available:
+                    text = self._postprocessor.process(text)
+
+            # Step 3: Paste
+            if self._paste_manager is None:
+                logger.error("Paste manager not initialized")
+                notify("Error", "Paste manager not available")
+                return
+
+            success = self._paste_manager.paste(text)
+
+            if not success:
+                notify(
+                    "Copied to clipboard",
+                    "Paste simulation failed. Use Ctrl+V to paste.",
+                )
+
+        except Exception as e:
+            logger.error("Processing failed: %s", e)
+            notify("Error", f"Processing failed: {e}")
+
+        finally:
+            self._set_state(AppState.IDLE)
