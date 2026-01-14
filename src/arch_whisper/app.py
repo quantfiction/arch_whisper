@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import threading
 from enum import Enum, auto
 from typing import TYPE_CHECKING
 
@@ -120,3 +121,89 @@ class App:
 
         finally:
             self._set_state(AppState.IDLE)
+
+    def _on_hotkey_press(self) -> None:
+        """Handle hotkey press - start recording."""
+        if self._state != AppState.IDLE:
+            logger.debug("Not idle, ignoring hotkey press")
+            return
+
+        self._set_state(AppState.RECORDING)
+
+        if self._config.ding_enabled:
+            play_ding(self._config.assets_dir)
+
+        if self._recorder is not None:
+            self._recorder.start()
+
+    def _on_hotkey_release(self) -> None:
+        """Handle hotkey release - stop recording and process."""
+        if self._state != AppState.RECORDING:
+            logger.debug("Not recording, ignoring hotkey release")
+            return
+
+        if self._recorder is None:
+            self._set_state(AppState.IDLE)
+            return
+
+        audio = self._recorder.stop()
+
+        # Process in background thread to keep GTK responsive
+        thread = threading.Thread(
+            target=self._process_recording,
+            args=(audio,),
+            daemon=True,
+        )
+        thread.start()
+
+    def run(self) -> None:
+        """Start the application."""
+        logger.info("Starting arch-whisper")
+
+        # Initialize components
+        self._recorder = AudioRecorder()
+        self._transcriber = WhisperTranscriber(self._config)
+        self._paste_manager = PasteManager()
+
+        # Optional Claude postprocessor
+        if self._config.claude_enabled:
+            try:
+                from arch_whisper.postprocess.claude import ClaudePostProcessor
+
+                self._postprocessor = ClaudePostProcessor(self._config)
+            except Exception as e:
+                logger.warning("Claude postprocessor unavailable: %s", e)
+
+        # Initialize tray
+        self._tray = TrayIndicator(
+            on_quit=self.stop,
+            assets_dir=self._config.assets_dir,
+        )
+
+        # Initialize hotkey manager
+        self._hotkey_manager = HotkeyManager(self._config)
+        self._hotkey_manager.start(
+            on_press=self._on_hotkey_press,
+            on_release=self._on_hotkey_release,
+        )
+
+        logger.info("Application ready. Press %s to record.", self._config.hotkey)
+        notify("Arch Whisper", f"Ready. Hold {self._config.hotkey} to record.")
+
+        # Start GTK main loop
+        Gtk.main()
+
+    def stop(self) -> None:
+        """Stop the application gracefully."""
+        logger.info("Stopping arch-whisper")
+
+        # Stop hotkey listener
+        if self._hotkey_manager is not None:
+            self._hotkey_manager.stop()
+
+        # Stop any active recording
+        if self._recorder is not None and self._recorder.is_recording:
+            self._recorder.stop()
+
+        # Quit GTK
+        GLib.idle_add(Gtk.main_quit)
