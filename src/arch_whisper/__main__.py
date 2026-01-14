@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import signal
 import sys
 
 from arch_whisper.app import App
@@ -43,22 +44,30 @@ def main() -> None:
     # Log optional feature status
     optional = check_optional_dependencies()
     for feature, available in optional.items():
-        logger.info(
-            "Feature %s: %s", feature, "available" if available else "unavailable"
-        )
+        status = "available" if available else "unavailable"
+        logger.info("Feature %s: %s", feature, status)
 
-    # Create and run application
+    # Create application
     app = App(config)
 
+    # Setup signal handlers for graceful shutdown
+    def on_shutdown(signum: int, frame) -> None:
+        sig_name = signal.Signals(signum).name
+        logger.info("Received %s, shutting down", sig_name)
+        app.stop()
+
+    signal.signal(signal.SIGINT, on_shutdown)
+    signal.signal(signal.SIGTERM, on_shutdown)
+
+    # Run application
     try:
         app.run()
-    except KeyboardInterrupt:
-        logger.info("Interrupted")
-        app.stop()
     except Exception as e:
         logger.exception("Fatal error: %s", e)
         notify("Error", f"Fatal error: {e}")
         sys.exit(1)
+
+    logger.info("Shutdown complete")
 
 
 if __name__ == "__main__":
