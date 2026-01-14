@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING
 
+import numpy as np
 from faster_whisper import WhisperModel
 
 if TYPE_CHECKING:
@@ -41,3 +42,44 @@ class WhisperTranscriber:
             )
             logger.info("Whisper model loaded")
         return self._model
+
+    def transcribe(self, audio: np.ndarray) -> str:
+        """Transcribe audio to text.
+
+        Args:
+            audio: Audio samples as float32 numpy array
+
+        Returns:
+            Transcribed text, or empty string if no speech detected
+        """
+        if audio.size == 0:
+            logger.debug("Empty audio input, returning empty string")
+            return ""
+
+        # Ensure audio is float32
+        if audio.dtype != np.float32:
+            audio = audio.astype(np.float32)
+
+        model = self._ensure_model()
+
+        try:
+            segments, info = model.transcribe(
+                audio,
+                vad_filter=True,
+                language=self._config.whisper_language,
+            )
+
+            # Concatenate all segment texts
+            text = " ".join(seg.text.strip() for seg in segments)
+            text = text.strip()
+
+            if text:
+                logger.debug("Transcribed %d chars", len(text))
+            else:
+                logger.debug("No speech detected in audio")
+
+            return text
+
+        except Exception as e:
+            logger.error("Transcription failed: %s", e)
+            return ""
