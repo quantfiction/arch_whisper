@@ -31,8 +31,8 @@ sudo apt install -y \
 ### 2. Clone and install
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/arch-whisper.git
-cd arch-whisper
+git clone https://github.com/quantfiction/arch_whisper.git
+cd arch_whisper
 
 # Create virtual environment with system packages (needed for GTK)
 python3 -m venv .venv --system-site-packages
