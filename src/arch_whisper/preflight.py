@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import logging
 import shutil
-from pathlib import Path
 
 from arch_whisper.utils import get_session_type
 
@@ -65,10 +64,8 @@ def check_optional_dependencies() -> dict[str, bool]:
     """
     features: dict[str, bool] = {}
 
-    # Claude credentials (avoid importing Claude modules in MVP)
-    features["claude_credentials"] = (
-        Path.home() / ".claude" / ".credentials.json"
-    ).exists()
+    # Claude CLI (used via Agent SDK for post-processing)
+    features["claude_cli"] = shutil.which("claude") is not None
 
     # Wayland evdev access
     session = get_session_type()

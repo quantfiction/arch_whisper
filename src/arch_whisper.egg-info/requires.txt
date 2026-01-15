@@ -6,6 +6,7 @@ anthropic>=0.40.0
 pynput>=1.7.6
 evdev>=1.6.0
 pyperclip>=1.8.2
+claude-agent-sdk>=0.1.19
 
 [:python_version < "3.11"]
 tomli>=2.0.0

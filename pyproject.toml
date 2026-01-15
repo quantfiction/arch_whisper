@@ -13,6 +13,7 @@ dependencies = [
     "evdev>=1.6.0",
     "pyperclip>=1.8.2",
     "tomli>=2.0.0; python_version < '3.11'",
+    "claude-agent-sdk>=0.1.19",
 ]
 
 [project.optional-dependencies]
