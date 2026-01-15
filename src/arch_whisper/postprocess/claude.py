@@ -15,7 +15,13 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 # Cleanup prompt for transcription post-processing
-CLEANUP_PROMPT = """Clean up this transcribed speech. Fix punctuation, capitalization, and obvious transcription errors. Keep the meaning identical. Do not add or remove content. Output only the cleaned text with no explanation.
+CLEANUP_PROMPT = """Clean up this transcribed speech:
+1. Fix punctuation and capitalization
+2. Remove filler words (um, uh, like, you know, so, I mean, basically, actually, literally, right)
+3. Fix obvious transcription errors
+4. Keep the core meaning intact
+
+Output only the cleaned text with no explanation.
 
 Transcribed text:
 {text}
