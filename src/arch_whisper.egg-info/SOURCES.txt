@@ -36,3 +36,7 @@ src/arch_whisper/transcription/__init__.py
 src/arch_whisper/transcription/whisper.py
 src/arch_whisper/tray/__init__.py
 src/arch_whisper/tray/indicator.py
+tests/test_config.py
+tests/test_state_machine.py
+tests/test_terminal_detection.py
+tests/test_timestamp_parsing.py

@@ -36,3 +36,8 @@ where = ["src"]
 
 [tool.setuptools.package-data]
 arch_whisper = ["assets/*"]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.2",
+]
