@@ -127,6 +127,10 @@ whisper_threads = 4
 # Enable/disable Claude cleanup
 claude_enabled = true
 
+# Claude model for post-processing (default: haiku for speed)
+# Options: claude-haiku-4-5-20251001, claude-sonnet-4-5-20250929, claude-opus-4-5-20251101
+claude_model = "claude-haiku-4-5-20251001"
+
 # Enable/disable the ding sound
 ding_enabled = true
 ```

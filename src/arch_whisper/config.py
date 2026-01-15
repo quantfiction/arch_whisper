@@ -21,7 +21,7 @@ class Config:
     whisper_threads: int = 4
     whisper_language: str | None = "en"
     claude_enabled: bool = True
-    claude_model: str = "claude-sonnet-4-20250514"
+    claude_model: str = "claude-haiku-4-5-20251001"
     ding_enabled: bool = True
     assets_dir: Path | None = None
 
