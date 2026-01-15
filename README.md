@@ -85,6 +85,30 @@ The text appears wherever your cursor is focused (chat apps, text editors, termi
 - **If running in background:** `pkill arch-whisper`
 - **From system tray:** Right-click the icon → Quit
 
+## Auto-start on login
+
+To start arch-whisper automatically when you log in:
+
+```bash
+mkdir -p ~/.config/autostart
+
+cat > ~/.config/autostart/arch-whisper.desktop << EOF
+[Desktop Entry]
+Type=Application
+Name=Arch Whisper
+Comment=Push-to-talk voice transcription
+Exec=$(pwd)/.venv/bin/arch-whisper
+Icon=audio-input-microphone
+Terminal=false
+X-GNOME-Autostart-enabled=true
+EOF
+```
+
+To disable autostart, delete the file:
+```bash
+rm ~/.config/autostart/arch-whisper.desktop
+```
+
 ## Configuration
 
 Create `~/.config/arch-whisper/config.toml` to customize:
