@@ -10,9 +10,10 @@ from arch_whisper.paste.clipboard import copy_to_clipboard
 
 logger = logging.getLogger(__name__)
 
-# Terminal window classes that need Ctrl+Shift+V instead of Ctrl+V
-TERMINAL_CLASSES = {
-    "gnome-terminal",
+# Terminal keywords to match in WM_CLASS (case-insensitive)
+# These are substrings that indicate a terminal emulator
+TERMINAL_KEYWORDS = {
+    "terminal",
     "konsole",
     "xterm",
     "urxvt",
@@ -20,27 +21,43 @@ TERMINAL_CLASSES = {
     "kitty",
     "terminator",
     "tilix",
-    "xfce4-terminal",
-    "mate-terminal",
-    "lxterminal",
     "terminology",
-    "st",
     "wezterm",
     "foot",
     "contour",
+    "st-256color",
+    "sakura",
+    "tilda",
+    "guake",
+    "yakuake",
+    "rxvt",
 }
 
 
 def _get_active_window_class() -> str | None:
-    """Get the WM_CLASS of the currently focused window."""
+    """Get the WM_CLASS of the currently focused window using xprop."""
     try:
+        # First get the active window ID
+        win_result = subprocess.run(
+            ["xdotool", "getactivewindow"],
+            capture_output=True,
+            timeout=2,
+        )
+        if win_result.returncode != 0:
+            return None
+
+        window_id = win_result.stdout.decode().strip()
+
+        # Then get WM_CLASS using xprop
         result = subprocess.run(
-            ["xdotool", "getactivewindow", "getwindowclassname"],
+            ["xprop", "-id", window_id, "WM_CLASS"],
             capture_output=True,
             timeout=2,
         )
         if result.returncode == 0:
-            return result.stdout.decode().strip().lower()
+            # Parse: WM_CLASS(STRING) = "instance", "class"
+            output = result.stdout.decode().strip().lower()
+            return output
     except Exception as e:
         logger.debug("Could not get window class: %s", e)
     return None
@@ -48,12 +65,12 @@ def _get_active_window_class() -> str | None:
 
 def _is_terminal_window() -> bool:
     """Check if the active window is a terminal emulator."""
-    window_class = _get_active_window_class()
-    if window_class:
-        # Check for exact match or partial match (e.g., "gnome-terminal-server")
-        for term_class in TERMINAL_CLASSES:
-            if term_class in window_class:
-                logger.debug("Detected terminal window: %s", window_class)
+    wm_class = _get_active_window_class()
+    if wm_class:
+        # Check if any terminal keyword appears in the WM_CLASS string
+        for keyword in TERMINAL_KEYWORDS:
+            if keyword in wm_class:
+                logger.debug("Detected terminal window: %s (matched: %s)", wm_class, keyword)
                 return True
     return False
 
