@@ -64,13 +64,19 @@ def load_credentials() -> ClaudeCredentials | None:
         expires_at = None
         if "expiresAt" in oauth:
             try:
-                # Parse ISO format datetime
-                expires_str = oauth["expiresAt"]
-                # Handle both Z suffix and +00:00 format
-                if expires_str.endswith("Z"):
-                    expires_str = expires_str[:-1] + "+00:00"
-                expires_at = datetime.fromisoformat(expires_str)
-            except (ValueError, TypeError) as e:
+                expires_val = oauth["expiresAt"]
+                # Handle Unix timestamp (milliseconds) or ISO format string
+                if isinstance(expires_val, (int, float)):
+                    # Unix timestamp in milliseconds
+                    expires_at = datetime.fromtimestamp(
+                        expires_val / 1000, tz=timezone.utc
+                    )
+                elif isinstance(expires_val, str):
+                    # ISO format datetime
+                    if expires_val.endswith("Z"):
+                        expires_val = expires_val[:-1] + "+00:00"
+                    expires_at = datetime.fromisoformat(expires_val)
+            except (ValueError, TypeError, OSError) as e:
                 logger.debug("Could not parse expiresAt: %s", e)
 
         logger.info("Loaded Claude credentials (expires: %s)", expires_at)
