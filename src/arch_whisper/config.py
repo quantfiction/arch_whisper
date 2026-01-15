@@ -22,6 +22,7 @@ class Config:
     whisper_language: str | None = "en"
     claude_enabled: bool = True
     claude_model: str = "claude-haiku-4-5-20251001"
+    anthropic_api_key: str | None = None  # Optional: use API key instead of Claude Code CLI
     ding_enabled: bool = True
     assets_dir: Path | None = None
 

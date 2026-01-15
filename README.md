@@ -46,16 +46,26 @@ uv sync
 pip install -e .
 ```
 
-### 3. Install Claude Code (for filler word cleanup)
+### 3. Set up Claude (for filler word cleanup)
 
-The app uses Claude to clean up transcriptions. Install Claude Code:
+The app uses Claude to clean up transcriptions. You have two options:
 
+**Option A: Anthropic API key** (recommended for non-subscribers)
+```bash
+# Set environment variable
+export ANTHROPIC_API_KEY="sk-ant-..."
+
+# Or add to config file (~/.config/arch-whisper/config.toml)
+anthropic_api_key = "sk-ant-..."
+```
+
+**Option B: Claude Code CLI** (for Claude Max/Pro subscribers)
 ```bash
 npm install -g @anthropic-ai/claude-code
 claude login
 ```
 
-Without Claude Code, the app still works but won't remove filler words.
+Without either option, the app still works but won't remove filler words.
 
 ## Usage
 
@@ -124,16 +134,31 @@ whisper_model = "base"
 # Number of CPU threads for Whisper
 whisper_threads = 4
 
-# Enable/disable Claude cleanup
+# Enable/disable Claude cleanup (set to false for faster, raw transcriptions)
 claude_enabled = true
 
 # Claude model for post-processing (default: haiku for speed)
 # Options: claude-haiku-4-5-20251001, claude-sonnet-4-5-20250929, claude-opus-4-5-20251101
 claude_model = "claude-haiku-4-5-20251001"
 
+# Anthropic API key (optional - use instead of Claude Code CLI)
+# Get your key at: https://console.anthropic.com/
+# Can also be set via ANTHROPIC_API_KEY environment variable
+# anthropic_api_key = "sk-ant-..."
+
 # Enable/disable the ding sound
 ding_enabled = true
 ```
+
+### Disabling post-processing
+
+For faster transcriptions without filler word cleanup:
+
+```toml
+claude_enabled = false
+```
+
+This skips the Claude step entirely — you get raw Whisper output instantly.
 
 ## Troubleshooting
 
